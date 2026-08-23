@@ -35,7 +35,7 @@ git push origin v0.1.0
 
 ## After the release: publish to the registry
 
-1. Open a PR to the [`openclime/plugins`](https://github.com/openclime/plugins)
+1. Open a PR to the [`bingryan/plugins`](https://github.com/bingryan/plugins)
    registry repo adding a `plugins.json` entry for your release.
 2. The `sha256` value printed in the release workflow log goes into the entry.
 3. Registry CI re-verifies the schema, the hash, the manifest, and that the
