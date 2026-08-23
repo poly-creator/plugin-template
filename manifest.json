@@ -1,0 +1,10 @@
+{
+	"id": "TEMPLATE-REPLACE",
+	"name": "TEMPLATE-REPLACE",
+	"version": "0.1.0",
+	"author": "Your Name",
+	"description": "Short description of what your plugin does.",
+	"main": "main.js",
+	"categories": ["utility"],
+	"permissions": ["ui.registerCommand", "ui.registerContextMenu"]
+}
