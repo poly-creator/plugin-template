@@ -1,0 +1,70 @@
+{
+	"name": "@openclime/plugin-sdk",
+	"version": "0.1.0",
+	"description": "Plugin SDK for OpenClime — types + OpenClimePlugin base class for building third-party renderer plugins (toolbar, agents, canvas events, providers).",
+	"keywords": [
+		"agents",
+		"canvas",
+		"openclime",
+		"plugin",
+		"sdk"
+	],
+	"license": "MIT",
+	"author": "OpenClime",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/openclime/openclime",
+		"directory": "packages/plugin-sdk"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"type": "module",
+	"sideEffects": false,
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./host": {
+			"types": "./dist/host.d.ts",
+			"default": "./dist/host.js"
+		},
+		"./base": {
+			"types": "./dist/base.d.ts",
+			"default": "./dist/base.js"
+		},
+		"./component": {
+			"types": "./dist/component.d.ts",
+			"default": "./dist/component.js"
+		},
+		"./settings": {
+			"types": "./dist/settings.d.ts",
+			"default": "./dist/settings.js"
+		},
+		"./modal": {
+			"types": "./dist/modal.d.ts",
+			"default": "./dist/modal.js"
+		},
+		"./menu": {
+			"types": "./dist/menu.d.ts",
+			"default": "./dist/menu.js"
+		},
+		"./ai": {
+			"types": "./dist/ai.d.ts",
+			"default": "./dist/ai.js"
+		}
+	},
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
+		"clean": "rm -rf dist",
+		"prepublishOnly": "pnpm clean && pnpm build"
+	},
+	"peerDependencies": {
+		"lucide-react": ">=0.400.0"
+	}
+}

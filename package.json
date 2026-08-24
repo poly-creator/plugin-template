@@ -6,13 +6,15 @@
 	"scripts": {
 		"build": "rolldown -c rolldown.config.mjs",
 		"dev": "rolldown -c rolldown.config.mjs -w",
-		"pack": "openclime-plugin-pack . --out dist",
-		"pack:check": "openclime-plugin-pack . --check"
+		"typecheck": "tsc -p tsconfig.json",
+		"pack": "node node_modules/@openclime/plugin-pack/dist/cli.js .",
+		"pack:check": "node node_modules/@openclime/plugin-pack/dist/cli.js . --check"
 	},
 	"devDependencies": {
-		"@openclime/plugin-pack": "^0.1.0",
-		"@openclime/plugin-sdk": "^0.1.0",
-		"rolldown": "^1.0.0",
+		"@openclime/plugin-pack": "file:./vendor/plugin-pack",
+		"@openclime/plugin-sdk": "file:./vendor/plugin-sdk",
+		"lucide-react": "^0.539.0",
+		"rolldown": "^1.2.5",
 		"typescript": "^5.6.0"
 	}
 }

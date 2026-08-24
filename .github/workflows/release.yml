@@ -1,0 +1,64 @@
+# Release pipeline — `git tag v0.1.0 && git push origin v0.1.0` and this
+# builds main.js, packs the marketplace zip, and publishes a GitHub Release
+# with the zip attached plus its sha256 in the notes. That sha256 is what a
+# registry PR (bingryan/plugins) pins — the desktop re-verifies the downloaded
+# bytes against it before installing.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  # Build provenance attestation (where-to-artifact came from).
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm install --no-fund --no-audit
+
+      - name: Build main.js
+        run: npm run build
+
+      - name: Pack release zip
+        run: node node_modules/@openclime/plugin-pack/dist/cli.js . > pack-summary.json
+
+      - name: Read pack summary (zip path, sha256)
+        id: pack
+        run: |
+          zip=$(node -e 'const s=require("./pack-summary.json");console.log(s.zip)')
+          sha=$(node -e 'const s=require("./pack-summary.json");console.log(s.sha256)')
+          echo "zip=$zip" >> "$GITHUB_OUTPUT"
+          echo "sha256=$sha" >> "$GITHUB_OUTPUT"
+          cat pack-summary.json
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: release/*.zip
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes "Built from ${GITHUB_SHA}.
+
+          zip: \`${{ steps.pack.outputs.zip }}\`
+          sha256: \`${{ steps.pack.outputs.sha256 }}\`
+
+          Pin this sha256 in your registry PR (bingryan/plugins plugins.json)." \
+            "${{ steps.pack.outputs.zip }}"
