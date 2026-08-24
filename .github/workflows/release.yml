@@ -33,16 +33,16 @@ jobs:
         run: npm run build
 
       - name: Pack release zip
-        run: node node_modules/@openclime/plugin-pack/dist/cli.js . > pack-summary.json
+        run: node node_modules/@openclime/plugin-pack/dist/cli.js . > /tmp/pack-summary.json
 
       - name: Read pack summary (zip path, sha256)
         id: pack
         run: |
-          zip=$(node -e 'const s=require("./pack-summary.json");console.log(s.zip)')
-          sha=$(node -e 'const s=require("./pack-summary.json");console.log(s.sha256)')
+          zip=$(node -e 'const s=require("/tmp/pack-summary.json");console.log(s.zip)')
+          sha=$(node -e 'const s=require("/tmp/pack-summary.json");console.log(s.sha256)')
           echo "zip=$zip" >> "$GITHUB_OUTPUT"
           echo "sha256=$sha" >> "$GITHUB_OUTPUT"
-          cat pack-summary.json
+          cat /tmp/pack-summary.json
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v2
