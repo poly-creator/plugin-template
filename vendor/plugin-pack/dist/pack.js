@@ -23,6 +23,12 @@
  *   5. Inject `manifest.integrity = "sha256:<hex>"` into the zip copy.
  *   6. Write the zip; report size, entry integrity, AND the zip's own sha256
  *      (the field the registry pins for tamper-evidence on GitHub releases).
+ *   7. Unless disabled, also write two versionless alias assets next to the
+ *      zip so GitHub's `releases/latest/download/` URLs stay constructible
+ *      without an API call: `<id>.zip` (byte copy of the versioned zip) and
+ *      `manifest.json` (the exact integrity-injected bytes shipped inside the
+ *      zip — what a version probe fetches). One plugin = one repo = one
+ *      latest release; the aliases are how `latest` stays nameable.
  */
 import { existsSync } from "node:fs";
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
@@ -180,6 +186,19 @@ export async function packPlugin(args) {
         zip(Object.fromEntries(entries), { level: 6 }, (err, data) => (err ? rej(err) : res(data)));
     });
     await writeFile(outPath, zipped);
+    // Alias assets (default on): versionless names beside the versioned zip.
+    // `<id>.zip` reuses the exact zip bytes (no re-pack — byte-identical by
+    // construction); `manifest.json` reuses the integrity-injected bytes that
+    // are inside the zip, so a version probe sees what ships.
+    let aliasZip;
+    let aliasManifest;
+    if (args.aliases !== false) {
+        const outDir = path.dirname(outPath);
+        aliasZip = path.join(outDir, `${manifest.id}.zip`);
+        aliasManifest = path.join(outDir, "manifest.json");
+        await writeFile(aliasZip, zipped);
+        await writeFile(aliasManifest, manifestBytes);
+    }
     const z = await stat(outPath);
     return {
         ok: true,
@@ -192,6 +211,8 @@ export async function packPlugin(args) {
         zippedBytes: z.size,
         sha256: await sha256Hex(zipped),
         integrity,
+        aliasZip,
+        aliasManifest,
     };
 }
 /** SHA-256 hex digest of raw bytes (Web Crypto, available Node ≥ 20). */
