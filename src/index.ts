@@ -8,12 +8,12 @@
  *
  * The SDK is bundled into main.js at build time (see rolldown.config.mjs),
  * so the zip is self-contained — the desktop serves it via the
- * `openclime-plugin://` protocol without any node_modules resolution.
+ * `polycreator-plugin://` protocol without any node_modules resolution.
  *
  * TODO(template): replace every TEMPLATE-REPLACE (here and in manifest.json).
  */
-import { Modal, OpenClimePlugin } from "@openclime/plugin-sdk";
-import type { PluginHost } from "@openclime/plugin-sdk";
+import { Modal, PolycreatorPlugin } from "@polycreator/plugin-sdk";
+import type { PluginHost } from "@polycreator/plugin-sdk";
 
 interface MyData {
 	n: number;
@@ -31,7 +31,7 @@ class HelloModal extends Modal {
 	}
 }
 
-export default class MyPlugin extends OpenClimePlugin {
+export default class MyPlugin extends PolycreatorPlugin {
 	async onload(): Promise<void> {
 		const data = (await this.loadData<MyData>()) ?? { n: 0 };
 

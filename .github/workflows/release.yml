@@ -1,21 +1,20 @@
-# Release pipeline — `git tag v0.1.0 && git push origin v0.1.0` and this
-# builds main.js, packs the plugin, and publishes a FULL GitHub Release with
-# the three assets the registry's latest-mode convention requires:
+# Release pipeline — `git tag v0.1.0 && git push origin v0.1.0` builds main.js,
+# packs the plugin, and publishes a FULL GitHub Release with the three assets the
+# registry's latest-mode convention requires:
 #
-#   TEMPLATE-REPLACE-0.1.0.zip  versioned install zip (pinned-mode installs)
-#   TEMPLATE-REPLACE.zip        byte-identical alias — `releases/latest/download/<id>.zip`
-#                               always resolves to the newest full release
-#   manifest.json               alias of the integrity-injected manifest from
-#                               inside the zip — the desktop's version probe
+#   <id>-<version>.zip   versioned install zip (pinned-mode installs)
+#   <id>.zip             byte-identical alias — `releases/latest/download/<id>.zip`
+#                        always resolves to the newest full release
+#   manifest.json        alias of the integrity-injected manifest from inside the
+#                        zip — the desktop's version probe
 #
-# The release MUST be full (not draft, not prerelease): `releases/latest`
-# ignores drafts/prereleases, so the alias URLs would 404. The workflow
-# enforces this by publishing with `--latest` (the default for full
-# releases); never edit the release back into a draft.
+# The release MUST be full (not draft, not prerelease): `releases/latest` ignores
+# drafts/prereleases, so the alias URLs would 404. This workflow publishes with
+# `gh release create` (a full release by default); never edit it back to a draft.
 #
-# Registry PRs (bingryan/plugins) do NOT need the sha256 for latest-mode
-# entries — in-zip integrity + PR review carry the trust. Pin the printed
-# sha256 only if you want a byte-locked pinned entry.
+# Registry entries in latest mode do NOT need the sha256 — in-zip integrity plus
+# PR review carry the trust. Pin the printed sha256 only if you want a byte-locked
+# pinned entry.
 name: release
 
 on:
@@ -24,7 +23,7 @@ on:
 
 permissions:
   contents: write
-  # Build provenance attestation (where-to-artifact came from).
+  # Build provenance attestation (where the artifact came from).
   id-token: write
   attestations: write
 
@@ -40,27 +39,36 @@ jobs:
           cache: npm
 
       - name: Install
-        run: npm install --no-fund --no-audit
+        run: npm ci
+
+      # A tag that disagrees with manifest.json would publish a version nobody
+      # can address, and a release cannot be republished.
+      - name: Guard tag matches manifest version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version=$(node -p 'require("./manifest.json").version')
+          if [ "$tag" != "$version" ]; then
+            echo "::error::tag v$tag != manifest.json version $version"
+            exit 1
+          fi
 
       - name: Build main.js
         run: npm run build
 
       - name: Pack release zips (versioned + aliases)
-        run: node node_modules/@openclime/plugin-pack/dist/cli.js . > /tmp/pack-summary.json
+        # Invoke the script directly: `npm run` prints its own banner to stdout,
+        # which would corrupt this JSON.
+        run: node scripts/pack.mjs > /tmp/pack-summary.json
 
-      - name: Read pack summary (zip paths, sha256)
+      - name: Read pack summary (zip paths, integrity, sha256)
         id: pack
         run: |
-          zip=$(node -e 'const s=require("/tmp/pack-summary.json");console.log(s.zip)')
-          alias_zip=$(node -e 'const s=require("/tmp/pack-summary.json");console.log(s.aliasZip)')
-          alias_manifest=$(node -e 'const s=require("/tmp/pack-summary.json");console.log(s.aliasManifest)')
-          sha=$(node -e 'const s=require("/tmp/pack-summary.json");console.log(s.sha256)')
-          {
-            echo "zip=$zip"
-            echo "alias_zip=$alias_zip"
-            echo "alias_manifest=$alias_manifest"
-            echo "sha256=$sha"
-          } >> "$GITHUB_OUTPUT"
+          for key in zip aliasZip aliasManifest sha256 integrity; do
+            value=$(node -e "console.log(require('/tmp/pack-summary.json').$key)")
+            {
+              echo "${key}=$value"
+            } >> "$GITHUB_OUTPUT"
+          done
           cat /tmp/pack-summary.json
 
       - name: Attest build provenance
@@ -77,13 +85,13 @@ jobs:
             --notes "Built from ${GITHUB_SHA}.
 
           versioned zip: \`${{ steps.pack.outputs.zip }}\`
-          alias zip: \`${{ steps.pack.outputs.alias_zip }}\`
-          alias manifest: \`${{ steps.pack.outputs.alias_manifest }}\`
+          alias zip: \`${{ steps.pack.outputs.aliasZip }}\`
+          alias manifest: \`${{ steps.pack.outputs.aliasManifest }}\`
+          entry integrity: \`${{ steps.pack.outputs.integrity }}\`
           sha256: \`${{ steps.pack.outputs.sha256 }}\`
 
-          Latest-mode registry entries need no pin — submit the PR to
-          bingryan/plugins as-is. Pin the sha256 above only for a
-          byte-locked pinned entry." \
-            "${{ steps.pack.outputs.zip }}" \
-            "${{ steps.pack.outputs.alias_zip }}" \
-            "${{ steps.pack.outputs.alias_manifest }}"
+          Latest-mode registry entries need no pin. Pin the sha256 above only
+          for a byte-locked pinned entry." \
+            "release/${{ steps.pack.outputs.zip }}" \
+            "release/${{ steps.pack.outputs.aliasZip }}" \
+            "release/${{ steps.pack.outputs.aliasManifest }}"

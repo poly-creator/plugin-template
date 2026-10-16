@@ -1,5 +1,5 @@
 {
-	"name": "my-openclime-plugin",
+	"name": "my-polycreator-plugin",
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
@@ -7,14 +7,15 @@
 		"build": "rolldown -c rolldown.config.mjs",
 		"dev": "rolldown -c rolldown.config.mjs -w",
 		"typecheck": "tsc -p tsconfig.json",
-		"pack": "node node_modules/@openclime/plugin-pack/dist/cli.js .",
-		"pack:check": "node node_modules/@openclime/plugin-pack/dist/cli.js . --check"
+		"pack": "node scripts/pack.mjs",
+		"pack:check": "node scripts/pack.mjs --check"
 	},
 	"devDependencies": {
-		"@openclime/plugin-pack": "file:./vendor/plugin-pack",
-		"@openclime/plugin-sdk": "file:./vendor/plugin-sdk",
+		"@polycreator/plugin-manifest": "^0.3.1",
+		"@polycreator/plugin-sdk": "^0.3.1",
 		"lucide-react": "^0.539.0",
 		"rolldown": "^1.2.5",
-		"typescript": "^5.6.0"
+		"typescript": "^5.6.0",
+		"yazl": "^3.3.1"
 	}
 }

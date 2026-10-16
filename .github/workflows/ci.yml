@@ -1,0 +1,53 @@
+name: ci
+
+# A fork inherits this workflow. The template itself keeps its TEMPLATE-REPLACE
+# placeholders on purpose, so the end-to-end check runs on a substituted copy
+# instead of failing on placeholders that are supposed to be there.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build main.js
+        run: npm run build
+
+      # Proves the whole release path works — schema validation, safe-id,
+      # entry hashing, archive layout — without demanding that this checkout be
+      # customised yet.
+      - name: End-to-end pack (substituted copy)
+        run: |
+          tmp=$(mktemp -d)/plugin
+          mkdir -p "$tmp"
+          cp -R . "$tmp"
+          cd "$tmp"
+          rm -rf node_modules
+          ln -s "$GITHUB_WORKSPACE/node_modules" node_modules
+          sed -i 's/TEMPLATE-REPLACE/com.example.template-selfcheck/g' manifest.json src/index.ts
+          node scripts/pack.mjs | tee /tmp/summary.json
+          test -f release/com.example.template-selfcheck.zip
+
+      - name: Advisory when this repository is still uncustomised
+        run: |
+          if grep -rq TEMPLATE-REPLACE manifest.json src/index.ts; then
+            echo "::notice::TEMPLATE-REPLACE is still present — expected for the template itself, must be replaced in a fork (see README step 1)."
+          fi

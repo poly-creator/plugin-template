@@ -5,6 +5,7 @@
 	"author": "Your Name",
 	"description": "Short description of what your plugin does.",
 	"main": "main.js",
+	"minAppVersion": "1.0.0",
 	"categories": ["utility"],
 	"permissions": ["ui.registerCommand", "ui.registerToolbarButton", "ui.openModal"]
 }
