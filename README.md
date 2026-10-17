@@ -18,6 +18,11 @@ Releases. Use the **Use this template** button to start a new plugin repo.
 - Dependencies come from npm: `@polycreator/plugin-sdk` and
   `@polycreator/plugin-manifest` (the SDK is inlined into your bundle at build
   time; nothing is vendored here)
+- The API guides live with the SDK:
+  [plugin settings](https://github.com/poly-creator/plugin-sdk/blob/main/docs/plugin-settings.md)
+  (declarative tabs and controls) and
+  [plugin node UI](https://github.com/poly-creator/plugin-sdk/blob/main/docs/plugin-node-ui.md)
+  (the floating toolbar and composer above/below a node)
 
 ## Three steps to your first release
 
