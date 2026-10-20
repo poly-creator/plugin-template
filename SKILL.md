@@ -85,3 +85,59 @@ zip's, entries you own only), then a human reviews.
   prefer `safe` (canvas only) unless you need the host.
 - zip ≤ 30 MiB; no path traversal (`../`, absolute paths).
 - `minAppVersion`: bump when you use newer SDK APIs.
+
+## Capability cookbook (what to write per feature)
+
+Everything below runs in `onload()` of the `PolycreatorPlugin` subclass.
+You write data; the host draws it — no React, no DOM styling.
+
+### Canvas node (the common case: new node type on the graph)
+
+```ts
+this.app.canvas.registerNodeDef({
+  type: `${this.manifest.id}:my-node`, // always prefix with your plugin id
+  label: "My Node",
+  icon: "Image", // lucide name
+  // ...inputs/outputs/run — see an existing gen plugin for the full shape
+});
+```
+
+### Node toolbar + composer (buttons/params above the node, prompt below)
+
+```ts
+this.addNodeUI([`${this.manifest.id}:my-node`], {
+  toolbar: [{ type: "button", id: "run", label: "运行", action: (ctx) => this.runIt(ctx) }],
+  composer: { prompt: { placeholder: "描述输入…", multiline: true } },
+});
+```
+Full shapes (`NodeToolbarItem`, `NodePromptBarDef`, params/dropdown/slider
+controls): SDK docs `plugin-node-ui.md`.
+
+### Settings tab (plugin config in the app Settings Modal)
+
+```ts
+this.settings = await this.loadSettings({ baseUrl: "", auto: false });
+this.addSettingTab(new MySettingsTab(this.app, this));
+// getSettingDefinitions() returns data rows: text/toggle/slider/dropdown
+// controls with key + validate + disabled — host renders, stores, validates.
+```
+Full control table: SDK docs `plugin-settings.md`.
+
+### Toolbar button / palette command / modal dialog
+
+In the template entry already: `addToolbarButton({ id, label, onClick })`,
+`addCommand({ id, title, action })`, `new Modal({ title, width })` subclass
+with `contentEl.appendChild(...)`. Copy that pattern.
+
+### Persistent data (per-plugin JSON, no backend)
+
+```ts
+const data = (await this.loadData<MyData>()) ?? { n: 0 };
+await this.saveData({ ...data, n: data.n + 1 });
+```
+
+### Theme (data-only, no code judged for security)
+
+A theme plugin is `manifest.json` + `theme.json` (+ up to 8 files), no `main`.
+Different shape from everything above — say so explicitly if the user asks
+for a theme, and point at an existing theme plugin, not this template.
