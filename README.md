@@ -115,6 +115,12 @@ The app loads a plugin from `plugins/<your-id>/` and serves its `main.js` over
 `polycreator-plugin://`, so this is the same code path an installed release uses
 (minus the download). Keep the folder name equal to your manifest `id`.
 
+## PolyCreator
+
+The desktop app this template targets: **https://polycreator.si** — download it
+there, or read the [author guide](https://polycreator.si/docs/publish) and the
+[help center](https://polycreator.si/help).
+
 ## License
 
 MIT
